@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                       http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+                       http://www.springframework.org/schema/context
+                       http://www.springframework.org/schema/context/spring-context-4.3.xsd
+                       http://www.springframework.org/schema/jee
+                       http://www.springframework.org/schema/jee/spring-jee-4.3.xsd
+                       http://www.springframework.org/schema/aop
+    					http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+                       http://www.springframework.org/schema/mvc
+                       http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+                       http://www.springframework.org/schema/util 
+                       http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+	<bean id="yyn_Test" class="com.yyn.model.Test">
+		<property name="a" value="15"></property>
+		<property name="b" value="16"></property>
+	</bean>
+<!-- 	<aop:config> -->
+<!-- 		<aop:aspect id = "test" ref="yyn_Test"> -->
+<!-- 			<aop:declare-parents types-matching="" implement-interface="com.yyn.Fit" default-impl="com.yyn.FitImpl"/> -->
+<!-- 		</aop:aspect> -->
+<!-- 	</aop:config> -->
+</beans>
