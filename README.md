@@ -1,2 +1,6 @@
 # sensor_annotation
 物联网标注，知识库构建和业务管理系统
+
+部署时请将file中的sensor_anntation文件考入linux系统下的/data/文件夹下
+如果是windows系统部署，请将文件放在某路径下后，修改Config类对应的TDB_ROOT变量
+并且svm需要用windows版本

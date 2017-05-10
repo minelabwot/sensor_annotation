@@ -59,8 +59,6 @@
     	<property name="dataSource" ref="dataSource"/>
     	<!-- 配置后Mapper文件里可以省略model前的完全限定类名 -->
     	<property name="typeAliasesPackage" value="com.yyn.model"/>
-    	<!-- 自动扫描mapping.xml文件 -->
-    	<property name="mapperLocations" value="/WEB-INF/mapper/MessageMapper.xml"/>
     </bean>
     
     <!-- mybatis自动扫描加载sql mapper文件 
