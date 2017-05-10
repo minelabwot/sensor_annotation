@@ -18,6 +18,8 @@ public class StartupListener implements ServletContextAware{
 	public void setServletContext(ServletContext sc) {
 		//System.out.println(sc.getInitParameter("contextConfigLocation"));
 		// TODO Auto-generated method stub
+		String path=Thread.currentThread().getContextClassLoader().getResource("").toString();
+		System.out.println("路径为"+path);
 		String tdbRoot = sc.getRealPath("/WEB-INF/RDF_Database/");
 		Dataset dataset = RDFReasoning.getDataset(tdbRoot, "sensor_annotation", "Wot.owl");
 		sc.setAttribute("dataset", dataset);

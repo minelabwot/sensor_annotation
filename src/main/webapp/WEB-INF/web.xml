@@ -4,18 +4,19 @@ xmlns="http://xmlns.jcp.org/xml/ns/javaee"
 xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" 
 version="3.1">
-  	<!-- 读取配置文件 -->
-  	 <context-param>
-        <param-name>contextConfigLocation</param-name>
-        <param-value>
-	        /WEB-INF/config/spring_mvc_root.xml;
-	        /WEB-INF/config/spring_mybatis.xml
-        </param-value>
-    </context-param>
-    
+
  	<welcome-file-list>
    		<welcome-file>/index.jsp</welcome-file>
   	</welcome-file-list>
+
+    <!-- 读取配置文件 -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>
+            classpath*:spring_mvc_root.xml
+            classpath*:spring_mybatis.xml
+        </param-value>
+    </context-param>
 
 	<listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
