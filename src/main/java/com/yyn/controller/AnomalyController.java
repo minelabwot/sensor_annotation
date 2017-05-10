@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.yyn.dao.DatasetContainer;
 import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.QuerySolution;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.yyn.service.AnomalyService;
 import com.yyn.util.RDFReasoning;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 @Controller
 public class AnomalyController {
@@ -27,7 +29,8 @@ public class AnomalyController {
 	AnomalyService as;
 	@RequestMapping("/Anomaly_showAllAnomaly.do")
 	public String generateDiagnosisModel(HttpServletRequest request,Model model) {
-		Dataset ds = (Dataset)request.getServletContext().getAttribute("dataset");
+		Dataset ds = ((DatasetContainer) WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
+				getBean("datasetContainer")).getDataset();
 		Map<String,List<String>> causes = new HashMap<>();
 		Map<String,String> times = new HashMap<>();
 		ds.begin(ReadWrite.READ);

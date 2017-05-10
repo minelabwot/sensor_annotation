@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.yyn.dao.DatasetContainer;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.yyn.model.Device;
 import com.yyn.model.User;
 import com.yyn.service.DeviceService;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 @Controller
 @RequestMapping("/device*.do")
@@ -33,7 +35,8 @@ public class DeviceController {
 	//添加tdb版本12-14更新
 	@RequestMapping("/devicePropertyAdd.do")
 	public String addProperty2mysql(HttpServletRequest request, Model model) {
-		Dataset tdbdataset = (Dataset)request.getSession().getServletContext().getAttribute("dataset");
+		Dataset tdbdataset = ((DatasetContainer) WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
+				getBean("datasetContainer")).getDataset();
 		System.out.println("mark_"+(tdbdataset == null));
 		
 		User user = (User)request.getSession().getAttribute("userInfo");
@@ -111,7 +114,8 @@ public class DeviceController {
 	
 	@RequestMapping("/deviceSearching.do")
 	public String searchSomeThing(HttpServletRequest request,Model model) {
-		Dataset dataset = (Dataset)request.getSession().getServletContext().getAttribute("dataset");
+		Dataset dataset = ((DatasetContainer)WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
+				getBean("datasetContainer")).getDataset();
 		String searchType = request.getParameter("searchType");
 		String firkey = request.getParameter("first_key");
 		String firval = request.getParameter("first_value");

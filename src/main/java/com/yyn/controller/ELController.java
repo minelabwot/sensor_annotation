@@ -8,6 +8,8 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.yyn.dao.DatasetContainer;
+import org.apache.jena.query.Dataset;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +19,7 @@ import com.yyn.model.Device;
 import com.yyn.service.DeviceService;
 
 import edu.bupt.linkSystemApplication.Application;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 @Controller
 @RequestMapping("/EL*")
@@ -55,10 +58,10 @@ public class ELController {
 		//向neo4j中添加
 		ds.addLink2Neo_instance(device);
 		//向tdb中添加
-//		Dataset dataset = (Dataset)request.getSession().getServletContext().getAttribute("dataset");
-//		ds.addELResult(id, dataset, device);
-		
-		System.out.println(device.getCompany());
+		Dataset dataset = ((DatasetContainer) WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
+				getBean("datasetContainer")).getDataset();
+		ds.addELResult(id, dataset, device);
+
 		device = ds.getColumnLink(device.getTable_id());
 		ds.addLink2Neo_column(device);
 		return "forward:/deviceDetail.do";

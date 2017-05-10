@@ -296,12 +296,12 @@ public class AnomalyService {
 		dataset.begin(ReadWrite.WRITE);
 		//inf推理
 		Model model = dataset.getNamedModel(NameSpaceConstants.WOT+"sensor_annotation");
-		String path = "file/rules.rule";
+		String path = "/data/sensor_annotation/rules.rule";
 		List<Rule> rules = Rule.rulesFromURL(path);
 		System.out.println("mark"+rules.size());
 		Reasoner reasoner = new GenericRuleReasoner(rules);  
-    	reasoner.setDerivationLogging(true); 
-    	InfModel inf = ModelFactory.createInfModel(reasoner, model);
+    	reasoner.setDerivationLogging(true);
+		InfModel inf = ModelFactory.createInfModel(reasoner, model);
     	dataset.addNamedModel(NameSpaceConstants.WOT+"sensor_annotation", inf);
 //    	StmtIterator it = inf.listStatements(null, null, (RDFNode)null);
 //    	System.out.println(it.hasNext());

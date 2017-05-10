@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.yyn.dao.DatasetContainer;
 import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.QueryExecution;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.yyn.service.AnomalyService;
 import com.yyn.service.DataService;
 import com.yyn.util.RDFReasoning;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 @Controller
 @RequestMapping("/sensor_data*.do")
@@ -62,7 +65,8 @@ public class DataController {
 		}
 		float temp_high = Float.parseFloat(proper.get("temp_high").toString());
 		float temp_low = Float.parseFloat(proper.get("temp_low").toString());
-		Dataset ds = (Dataset)request.getSession().getServletContext().getAttribute("dataset");
+		Dataset ds = ((DatasetContainer)WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
+				getBean("datasetContainer")).getDataset();
 			
 		ds.begin(ReadWrite.READ);
 		String queryString = StrUtils.strjoinNL(
@@ -176,8 +180,9 @@ public class DataController {
 	
 	@RequestMapping("/sensor_data_diagnosis.do")
 	public String diagnosis(HttpServletRequest request) {
-		Dataset ds = (Dataset)request.getSession().getServletContext().getAttribute("dataset");
-		as.generateDiagModel(ds,request.getServletContext());
+		Dataset ds = ((DatasetContainer)WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
+				getBean("datasetContainer")).getDataset();
+		as.generateDiagModel(ds);
 		RDFReasoning.output(ds);
 		return "servicePage/deviceList.jsp";
 	}
