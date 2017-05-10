@@ -1,5 +1,6 @@
 package com.yyn.dao;
 
+import com.yyn.config.Config;
 import com.yyn.util.RDFReasoning;
 import org.apache.jena.query.Dataset;
 
@@ -11,19 +12,17 @@ public class DatasetContainer {
 
     private Dataset dataset;
 
-//    public void init() {
-//
-//        String tdbRoot = ("/WEB-INF/RDF_Database/");
-//        Dataset dataset = RDFReasoning.getDataset(tdbRoot, "sensor_annotation", "Wot.owl");
-//        setDataset(dataset);
-//        System.out.println("Start up Listener execute, dataset  has been set to context");
-//    }
+    public void init() {
+        Dataset dataset = RDFReasoning.getDataset(Config.TDB_ROOT, Config.TDB_DATABASE, Config.OWL_FILE_NAME);
+        setDataset(dataset);
+        System.out.println("TDB has been init into "+Config.TDB_ROOT+Config.TDB_DATABASE);
+    }
 
     public Dataset getDataset() {
         return dataset;
     }
 
-    public void setDataset(Dataset dataset) {
+    private void setDataset(Dataset dataset) {
         this.dataset = dataset;
     }
 }

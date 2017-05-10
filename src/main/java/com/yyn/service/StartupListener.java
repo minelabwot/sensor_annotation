@@ -16,32 +16,32 @@ public class StartupListener implements ServletContextAware{
 	
 	@Override
 	public void setServletContext(ServletContext sc) {
-		//System.out.println(sc.getInitParameter("contextConfigLocation"));
-		// TODO Auto-generated method stub
-		String path=Thread.currentThread().getContextClassLoader().getResource("").toString();
-		System.out.println("路径为"+path);
-		String tdbRoot = sc.getRealPath("/WEB-INF/RDF_Database/");
-		Dataset dataset = RDFReasoning.getDataset(tdbRoot, "sensor_annotation", "Wot.owl");
-		sc.setAttribute("dataset", dataset);
-		System.out.println("Start up Listener execute, dataset  has been set to context");
-
-		Thread t = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				while(true) {
-					try {
-						Thread.sleep(1000*20);
-						as.generateDiagModel(dataset,sc);
-						RDFReasoning.output(dataset);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-		t.start();
+//		//System.out.println(sc.getInitParameter("contextConfigLocation"));
+//		// TODO Auto-generated method stub
+//		String path=Thread.currentThread().getContextClassLoader().getResource("").toString();
+//		System.out.println("路径为"+path);
+//		String tdbRoot = sc.getRealPath("/WEB-INF/RDF_Database/");
+//		Dataset dataset = RDFReasoning.getDataset(tdbRoot, "sensor_annotation", "Wot.owl");
+//		sc.setAttribute("dataset", dataset);
+//		System.out.println("Start up Listener execute, dataset  has been set to context");
+//
+//		Thread t = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				// TODO Auto-generated method stub
+//				while(true) {
+//					try {
+//						Thread.sleep(1000*20);
+//						as.generateDiagModel(dataset,sc);
+//						RDFReasoning.output(dataset);
+//					} catch (InterruptedException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//				}
+//			}
+//		});
+//		t.start();
 	}
 	
 }

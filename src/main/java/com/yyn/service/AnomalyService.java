@@ -74,13 +74,13 @@ public class AnomalyService {
 	}
 	
 	
-	public void generateDiagModel(Dataset ds, ServletContext context) {
+	public void generateDiagModel(Dataset ds) {
 		generateFoI(ds);
 		createMandatoryProp(ds);
 		createOptional(ds);
 		createProcess(ds);
 		combineProcess(ds);
-		createCause(ds,context);
+		createCause(ds);
 	}
 	
 	private void generateFoI(Dataset ds) {
@@ -292,11 +292,11 @@ public class AnomalyService {
 		dataset.end();
 	}
 	
-	private void createCause(Dataset dataset,ServletContext context) {
+	private void createCause(Dataset dataset) {
 		dataset.begin(ReadWrite.WRITE);
 		//inf推理
 		Model model = dataset.getNamedModel(NameSpaceConstants.WOT+"sensor_annotation");
-		String path = context.getRealPath("/WEB-INF/config/rules.rule");
+		String path = "file/rules.rule";
 		List<Rule> rules = Rule.rulesFromURL(path);
 		System.out.println("mark"+rules.size());
 		Reasoner reasoner = new GenericRuleReasoner(rules);  

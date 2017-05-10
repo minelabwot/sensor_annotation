@@ -1,0 +1,34 @@
+@prefix wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix ssn: <http://purl.oclc.org/NET/ssnx/ssn#>. 
+
+[updateHighPosCause: (?anomaly a wot:Anomaly)(?sensor1 wot:generate ?anomaly)(?anomaly ssn:observationSamplingTime ?time)(?sensor1 ssn:forProperty ?prop1)
+(?sensor1 wot:hasState wot:high)(?proc a wot:PositiveCorrelationProcess)
+(?proc ssn:hasOutput ?prop1)(?proc ssn:hasInput ?prop2)(?sensor2 ssn:forProperty ?prop2)
+(?sensor2 wot:hasState wot:high)(?cause rdf:type wot:ObservedCause)(?cause ssn:observationSamplingTime ?time)
+->
+ (?sensor2 wot:generate ?cause)(?anomaly wot:hasPotCause ?cause)]
+ 
+ 
+ [updateLowNeg: (?anomaly a wot:Anomaly)(?sensor1 wot:generate ?anomaly)(?anomaly ssn:observationSamplingTime ?time)(?sensor1 ssn:forProperty ?prop1)
+(?sensor1 wot:hasState wot:low)(?proc a wot:NegativeCorrelationProcess)
+(?proc ssn:hasOutput ?prop1)(?proc ssn:hasInput ?prop2)(?sensor2 ssn:forProperty ?prop2)
+(?sensor2 wot:hasState wot:low)(?cause rdf:type wot:ObservedCause)(?cause ssn:observationSamplingTime ?time)
+->
+ (?sensor2 wot:generate ?cause)(?anomaly wot:hasPotCause ?cause)]
+ 
+ 
+ [updateLowPos: (?anomaly a wot:Anomaly)(?sensor1 wot:generate ?anomaly)(?anomaly ssn:observationSamplingTime ?time)(?sensor1 ssn:forProperty ?prop1)
+(?sensor1 wot:hasState wot:low)(?proc a wot:PositiveCorrelationProcess)
+(?proc ssn:hasOutput ?prop1)(?proc ssn:hasInput ?prop2)(?sensor2 ssn:forProperty ?prop2)
+(?sensor2 wot:hasState wot:low)(?cause rdf:type wot:ObservedCause)(?cause ssn:observationSamplingTime ?time)
+->
+ (?sensor2 wot:generate ?cause)(?anomaly wot:hasPotCause ?cause)]
+ 
+ 
+ [updateHighNeg: (?anomaly rdf:type wot:Anomaly)(?sensor1 wot:generate ?anomaly)(?anomaly ssn:observationSamplingTime ?time)(?sensor1 ssn:forProperty ?prop1)
+(?sensor1 wot:hasState wot:high)(?proc rdf:type wot:NegativeCorrelationProcess)
+(?proc ssn:hasOutput ?prop1)(?proc ssn:hasInput ?prop2)(?sensor2 ssn:forProperty ?prop2)
+(?sensor2 wot:hasState wot:high)(?cause rdf:type wot:ObservedCause)(?cause ssn:observationSamplingTime ?time)
+->
+ (?sensor2 wot:generate ?cause)(?anomaly wot:hasPotCause ?cause)]
