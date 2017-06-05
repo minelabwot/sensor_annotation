@@ -1,54 +1,30 @@
 package com.yyn.service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.jena.atlas.lib.StrUtils;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.ReadWrite;
-import org.apache.jena.query.ResultSet;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import com.yyn.config.NameSpaceConstants;
 import com.yyn.dao.DataCollectionDAO;
 import com.yyn.model.Device;
 import com.yyn.model.Relation;
 import com.yyn.model.Rule;
 import com.yyn.model.Struct;
 import com.yyn.util.RDFReasoning;
+import org.apache.jena.atlas.lib.StrUtils;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.ResultSet;
+import org.neo4j.driver.v1.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 @Service
 public class DeviceService {
-
-	private static final String NS_WOT = "http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#";
-	private String prefix = StrUtils.strjoinNL(
-			"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-			"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-			"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ",
-			"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ",
-			"PREFIX dul: <http://www.loa-cnr.it/ontologies/DUL.owl#> ");
 	
 	private List<String> unDisplayProperty = new ArrayList<String>();
 	
 	@Autowired
 	private DataCollectionDAO dc;
-	//public static final String PREFIX = "http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#";
-	@Autowired
-	Neo4jConnector connector;
 	
 	public DeviceService() {
 		unDisplayProperty.add("type");
@@ -64,7 +40,7 @@ public class DeviceService {
 		Driver driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "930208" ) );
 		Session session = driver.session();
 		String statement = "match (a:Class {label:\""+deviceType+"\"}) merge (p:Device {name:\""+name+"\",description:\""+desc
-		+"\",user:\""+owner+"\",ref:\""+NS_WOT+name+"\"}) merge (p)-[:NamedIndividual {ref:\"http://www.w3.org/2002/07/owl#NamedIndividual\",label:\"NamedIndividual\"}]->(a) return id(p)";
+		+"\",user:\""+owner+"\",ref:\""+NameSpaceConstants.WOT+name+"\"}) merge (p)-[:NamedIndividual {ref:\"http://www.w3.org/2002/07/owl#NamedIndividual\",label:\"NamedIndividual\"}]->(a) return id(p)";
 		try {
 			StatementResult sr =  session.run(statement);
 			if(sr.hasNext())
@@ -125,26 +101,8 @@ public class DeviceService {
 						+ "merge (d)-[:"+s+"]->(p"+index+") merge (p"+index+")-[:NamedIndividual]->(c"+index+")";
 					++index;
 					break;
-//				case "detects": 
-//					temp2 += ",(c"+index+":Class {label:\"Event\"})";
-//					temp += " merge (p"+index+":Instance {label:\""+map.get(s)+"\"}) "
-//						+ "merge (d)-[:"+s+"]->(p"+index+") merge (p"+index+")-[:NamedIndividual]->(c"+index+")";
-//					++index;
-//					break;
-//				case "subscribe":
-//					temp += " merge (p"+index+":Instance {label:\""+map.get(s)+"\"}) "
-//							+ "merge (d)-[:"+s+"]->(p"+index+")";
-//						++index;
-//						break;
-//				case "triggers":
-//					temp2 += ",(c"+index+":Class {label:\"Action\"})";
-//					temp += " merge (p"+index+":Instance {label:\""+map.get(s)+"\"}) "
-//							+ "merge (d)-[:"+s+"]->(p"+index+") merge (p"+index+")-[:NamedIndividual]->(c"+index+")";
-//						++index;
-//						break;
 			}
 		}
-		
 		String statement = "match (d)"+temp2+"where id(d)="+id+temp;
 		try {
 			session.run(statement);
@@ -188,13 +146,10 @@ public class DeviceService {
 	public Device getDeviceInfo(String device_id) {
 		return dc.getDeviceInfo(device_id);
 	}
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public List showDetail(String id,Map<String,String> resultmap) {
+
+	public void showDetail(String id,Map<String,String> resultmap) {
 		Driver driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "930208" ) );
 		Session session = driver.session();
-
-		List list = new ArrayList();
 		try {
 			String statement = "match (d) where id(d)="+id+" return d";
 			StatementResult result = session.run(statement);
@@ -225,146 +180,18 @@ public class DeviceService {
 				Map<String,Object> proper = r.get("o").asMap();
 				resultmap.put(rName, proper.get("label").toString());
 			}
-			list.add(events_actions(Integer.parseInt(id)));
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				session.close();
 				driver.close();
 			}
-		return list;
 	}
-	public List<List<String>> events_actions(int id) {
-		Driver driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "930208" ) );
-		Session session = driver.session();
-		List<List<String>> list = new ArrayList<List<String>>();
-		List<String> events = new ArrayList<String>();
-		List<String> actions = new ArrayList<String>();
-		String statement = "match (d)-[:triggers]->(o) where id(d)="+id+" return o.label";
-		try {
-			StatementResult sr = session.run(statement);
-			while(sr.hasNext()) {
-				Record r = sr.next();
-				actions.add(r.get("o.label").asString());
-			}
-			statement = "match (d)-[:subscribe]->(o) where id(d)="+id+" return o.label";
-			sr = session.run(statement);
-			while(sr.hasNext()) {
-				Record r = sr.next();
-				events.add(r.get("o.label").asString());
-			}
-			list.add(events);
-			list.add(actions);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			session.close();
-			driver.close();
-		}
-		return list;
-	}
-	public Map<String,String> showAllProperty(String deviceType,String state) {
-		Driver driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "930208" ) );
-		Session session = driver.session();
-		Map<String,String> map = new HashMap<String,String>();
-		String statement;
-		if("active".equals(state))
-			statement = "MATCH (:Class {label:\""+deviceType+"\"})-[:subClassOf *1..]->(p),(p)-[r]->(o) return r.ref,o.ref";
-		else
-			statement = "MATCH (:Class {label:\""+deviceType+"\"})-[:subClassOf *1..]->(p),(o)-[r]->(p) return r.ref,o.ref";
-		try {
-			StatementResult result = session.run(statement);
-			while (result.hasNext()) {
-				Record r = result.next();
-				String label = r.get("r.ref").asString().split("#")[1];
-				if(!"subClassOf".equals(label) && !"linkTo".equals(label)) {
-					String tmp = r.get("o.ref").asString();
-					map.put(label,tmp.split("#")[1]);
-				}
-			}
-			if("active".equals(state))
-				statement = "MATCH (:Class {label:\""+deviceType+"\"})-[r]->(o) return r.ref,o.ref";
-			else
-				statement = "MATCH (o)-[r]->(:Class {label:\""+deviceType+"\"}) return r.ref,o.ref";
-			result = session.run(statement);
-			while (result.hasNext()) {
-				Record r = result.next();
-				String rLabel = r.get("r.ref").asString().split("#")[1];
-				if(!"subClassOf".equals(rLabel)  && !"NamedIndividual".equals(rLabel)) {
-					map.put(rLabel,r.get("o.ref").asString().split("#")[1]);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			session.close();
-			driver.close();
-		}
-		return map;
-	}
-	
-	public void addRule(String id,String[] events, String[] actions) {
-		Driver driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "930208" ) );
-		Session session = driver.session();
-		String tmp = "";
-		int ei=0,ai=0;
-		for(String event : events) {
-			tmp += "merge (e"+ei+":Event {label:\""+event+"\"}) merge (t)-[:hasInput]->(e"+ei+") ";
-			++ei;
-		}
-		for(String action : actions) {
-			tmp += "merge (a"+ai+":Action {label:\""+action+"\"}) merge (t)-[:hasOutput]->(a"+ai+") ";
-			++ai;
-		}
-		
-		String statement = "start d=node("+id+") create (d)-[:hasRule]->(t:TriggerRule {label:\"rule\"}) "+tmp;
-		session.run(statement);
-		try {
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			session.close();
-			driver.close();
-		}
-	}
-	
-	public List<Rule> showRule(String id) {
-		Driver driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "930208" ) );
-		Session session = driver.session();
-		List<Rule> rules = new ArrayList<Rule>();
-		String statement = "start n=node("+id+") match (n)-[:hasRule]->(r) return id(r)";
-		try {
-			StatementResult result = session.run(statement);
-			List<String> ids = new ArrayList<String>();
-			while(result.hasNext()) 
-				ids.add(""+result.next().get("id(r)").asInt());
-			for(String tmpId : ids) {
-				statement = "start n=node("+tmpId+") "
-						+ "match (n)-[:hasInput]->(in),(n)-[:hasOutput]->(out)  return in.label as in,out.label as out";
-				result = session.run(statement);
-				Set<String> events = new HashSet<String>();
-				Set<String> actions = new HashSet<String>();
-				while(result.hasNext()) {
-					Record r = result.next();
-					events.add(r.get("in").asString());
-					actions.add(r.get("out").asString());
-				}
-				rules.add(new Rule(events,actions));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			session.close();
-			driver.close();
-		}
-		return rules;		
-	}
-	
 	
 	public Device getLink(String id) {
 		return dc.getLink(id);
 	}
+
 	public void addLink2Neo_instance(Device device) {
 		Driver driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "930208" ) );
 		Session session = driver.session();
@@ -436,25 +263,26 @@ public class DeviceService {
 	//TDB method
 	public void add2TDB(int id,HttpServletRequest request,Dataset ds,Map<String,String> metadata_avp,String deviceType) {
 		ds.begin(ReadWrite.WRITE);
-		String device_type = null;
-		if("Sensor".equals(deviceType))
-			device_type = "ssn:"+deviceType;
-		else
-			device_type = "wot:"+deviceType;
+		String device_type;
+		String state;
+		if("Sensor".equals(deviceType)) {
+			device_type = "ssn:" + deviceType;
+			state = "?device wot:currentStatus wot:nomal. ";
+		}
+		else {
+			device_type = "san:" + deviceType;
+			state = "?device wot:currentState wot:off. " +
+			"?device wot:currentStatus wot:nomal. ";
+		}
 
 		try {
 			String update = StrUtils.strjoinNL(
-					"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-					"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ",
-					"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-					"PREFIX dul: <http://www.loa-cnr.it/ontologies/DUL.owl#> ",
-					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-					
+					NameSpaceConstants.PREFIX,
 					"INSERT { ",
 						"GRAPH wot:sensor_annotation {",
 						"?device rdf:type "+device_type+". ",
 						"?device wot:deviceID \""+id+"\"^^xsd:string.",
-						"?device wot:hasState wot:nomal. ",
+						state,
 						//region
 						"?region rdf:type wot:Region. ",
 						"?device dul:hasLocation ?region. ",
@@ -473,12 +301,12 @@ public class DeviceService {
 						"?device wot:isOwnedBy ?owner. }",
 					" } USING wot:sensor_annotation ",
 					" WHERE {",
-					"BIND(URI(CONCAT(\""+NS_WOT+"\",\""+metadata_avp.get("name")+"\")) as ?device). ",
-					"BIND(URI(CONCAT(\""+NS_WOT+"\",\""+metadata_avp.get("hasLocation")+"\")) as ?region). ",
-					"BIND(URI(CONCAT(\""+NS_WOT+"\",\""+metadata_avp.get("hasSpot")+"\")) as ?spot). ",
-					"BIND(URI(CONCAT(\""+NS_WOT+"\",\""+metadata_avp.get("hasUnit")+"\")) as ?unit). ",
-					"BIND(URI(CONCAT(\""+NS_WOT+"\",\""+metadata_avp.get("isOwnedBy")+"\")) as ?owner). ",
-					"BIND(URI(CONCAT(\""+NS_WOT+"\",\""+metadata_avp.get("hasType")+"\")) as ?type) }");
+					"BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",\""+metadata_avp.get("name")+"\")) as ?device). ",
+					"BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",\""+metadata_avp.get("hasLocation")+"\")) as ?region). ",
+					"BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",\""+metadata_avp.get("hasSpot")+"\")) as ?spot). ",
+					"BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",\""+metadata_avp.get("hasUnit")+"\")) as ?unit). ",
+					"BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",\""+metadata_avp.get("isOwnedBy")+"\")) as ?owner). ",
+					"BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",\""+metadata_avp.get("hasType")+"\")) as ?type) }");
 			RDFReasoning.updateQuery(update, ds);
 			ds.commit();
 		} finally { 
@@ -486,11 +314,47 @@ public class DeviceService {
 		}
 		RDFReasoning.output(ds);
 	}
-	
+	//add action
+	public void addAction2TDB(String id , String name,String url,String param,String lifecycle,String effect,Dataset ds) {
+		Map<String,String> map = new HashMap<>();
+		map.put("increment","1");
+		map.put("decrement","-1");
+
+	    ds.begin(ReadWrite.WRITE);
+		try {
+			String update = StrUtils.strjoinNL(
+                    NameSpaceConstants.PREFIX,
+                    "INSERT { ",
+                    "GRAPH wot:sensor_annotation {",
+                    "?device msm:hasOperation ?operation. ",
+                    "?operation a san:Actuation. ",
+                    "?operation wot:hasAddress \""+url+"\"^^xsd:string. ",
+                    "?operation wot:hasParam \""+param+"\"^^xsd:string. ",
+                    "?lifecycle a wot:State. ",
+                    "?lifecycle wot:hasValue \""+map.get(effect)+"\"^^xsd:int. ",
+                    "?device wot:hasState ?lifecycle. ",
+                    "?effect a wot:PostCondition. ",
+                    "?device wot:triggers ?effect. ",
+                    "?effect wot:resultIn \""+map.get(effect)+"\"^^xsd:int. ",
+					"?operation dul:includesEvent ?effect. }",
+                    " } USING wot:sensor_annotation ",
+                    " WHERE {",
+                    "?device wot:deviceID '"+id+ "'^^xsd:string. ",
+                    "?device wot:hasType ?entityType. ",
+                    "BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",STRAFTER(str(?device),'#'),'_',\""+name+"\")) as ?operation). ",
+                    "BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",STRAFTER(str(?entityType),'#'),'_',\""+lifecycle+"\")) as ?lifecycle). ",
+                    "BIND(URI(CONCAT(\""+NameSpaceConstants.WOT+"\",STRAFTER(str(?device),'#'),'_',\""+effect+"\")) as ?effect). }");
+			RDFReasoning.updateQuery(update, ds);
+
+			ds.commit();
+		} finally {
+			ds.end();
+		}
+	}
 	public void addELResult(String id,Dataset ds,Device device) {
 		ds.begin(ReadWrite.WRITE);
 		try {
-			String update = StrUtils.strjoinNL(prefix,
+			String update = StrUtils.strjoinNL(NameSpaceConstants.PREFIX,
 					"INSERT {",
 						"GRAPH wot:sensor_annotation { ",
 							"?region wot:linkTo \""+ device.getRegion().split(",")[0] +"\"^^xsd:string. ",
@@ -561,7 +425,7 @@ public class DeviceService {
 		try {
 			String query = null;
 			if("Device".equals(searchType)) {
-				query = StrUtils.strjoinNL(prefix,
+				query = StrUtils.strjoinNL(NameSpaceConstants.PREFIX,
 						"SELECT DISTINCT ?deviceID ",
 						"WHERE { ",
 							"GRAPH wot:sensor_annotation {",
@@ -576,7 +440,7 @@ public class DeviceService {
 						"}");
 			}
 			else if("Anomaly".equals(searchType)) {
-				query = StrUtils.strjoinNL(prefix,
+				query = StrUtils.strjoinNL(NameSpaceConstants.PREFIX,
 						"SELECT DISTINCT ?deviceID ?anomaly ?cause ?time ?device ",
 						"WHERE { ",
 							"GRAPH wot:sensor_annotation { ",

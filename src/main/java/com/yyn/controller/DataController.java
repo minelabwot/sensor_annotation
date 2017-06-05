@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.yyn.config.NameSpaceConstants;
 import com.yyn.dao.DatasetContainer;
 import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.Dataset;
@@ -29,11 +30,6 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 @Controller
 @RequestMapping("/sensor_data*.do")
 public class DataController {
-//	private static final String NS_SSN = "http://purl.oclc.org/NET/ssnx/ssn#";
-	private static final String NS_WOT = "http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#";
-//	private static final String NS_RDFS = "http://www.w3.org/2000/01/rdf-schema#";
-//	private static final String NS_DUL = "http://www.loa-cnr.it/ontologies/DUL.owl#";
-	
 	@Autowired
 	private DataService ds;
 	
@@ -70,10 +66,7 @@ public class DataController {
 			
 		ds.begin(ReadWrite.READ);
 		String queryString = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-				"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ",
+                NameSpaceConstants.PREFIX,
 				"SELECT ?a ?pro",
 				"WHERE { GRAPH wot:sensor_annotation { ?a wot:deviceID '"+id+ "'^^xsd:string. ",
 				"?type a wot:EntityType. ",
@@ -98,9 +91,7 @@ public class DataController {
 		
 		try {
 			//每次更新传感值时同步
-			String update = StrUtils.strjoinNL("PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#>",
-		    		"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-		    		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ",
+			String update = StrUtils.strjoinNL(NameSpaceConstants.PREFIX,
 		    		"DELETE { GRAPH wot:sensor_annotation { ?device wot:hasValue ?val} } ",
 		    		"INSERT { ",
 			    		"GRAPH wot:sensor_annotation {",
@@ -132,25 +123,21 @@ public class DataController {
 					System.out.println("产生了高温异常");
 				}
 				String update = StrUtils.strjoinNL(
-						"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-						"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-						"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ",
-						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ",
-						"DELETE { GRAPH wot:sensor_annotation { ?device wot:generate ?event. ",
+						NameSpaceConstants.PREFIX,
+						"DELETE { GRAPH wot:sensor_annotation { ?device ssn:detects ?event. ",
 						"?anomaly ssn:observationSamplingTime ?time. } }",
 						"INSERT { GRAPH wot:sensor_annotation { ?anomaly rdf:type wot:Anomaly. ",
 						//同时生成致因实体
 						"?cause rdf:type wot:ObservedCause. ",
 						"?cause ssn:observationSamplingTime '"+time.toString()+"'^^xsd:dataTime. ",
-						"?device wot:generate ?anomaly. ",
+						"?device ssn:detects ?anomaly. ",
 						"?anomaly ssn:observationSamplingTime '"+time.toString()+"'^^xsd:dataTime. } }",
 						"USING wot:sensor_annotation ",
 						"WHERE { ?device wot:deviceID '"+id+"'^^xsd:string .",
-						"?event a ?evnetCls. ",
+						"?event a ?eventCls. ",
 						"?sub ?rel ?time. ",
-						"BIND(URI('"+NS_WOT+"temp_"+s+"_"+id+"_cause') as ?cause). ",
-						"BIND(URI('"+NS_WOT+"temp_"+s+"_"+id+"') as ?anomaly).",
+						"BIND(URI('"+ NameSpaceConstants.WOT+"temp_"+s+"_"+id+"_cause') as ?cause). ",
+						"BIND(URI('"+NameSpaceConstants.WOT+"temp_"+s+"_"+id+"') as ?anomaly).",
 						"}");
 				RDFReasoning.updateQuery(update, ds);
 				ds.commit();
@@ -159,15 +146,11 @@ public class DataController {
 			else {
 				ds.begin(ReadWrite.WRITE);
 				String update = StrUtils.strjoinNL(
-						"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-						"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-						"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ",
-						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ",
-						"DELETE { GRAPH wot:sensor_annotation { ?device wot:generate ?event. } } ",
+                        NameSpaceConstants.PREFIX,
+						"DELETE { GRAPH wot:sensor_annotation { ?device wot:detects ?event. } } ",
 						"USING wot:sensor_annotation ",
 						"WHERE { ?device wot:deviceID '"+id+"'^^xsd:string .",
-						"?event a ?evnetCls. ",
+						"?event a ?eventCls. ",
 						"?eventCls rdfs:subClassOf ssn:Stimulus. }");
 				RDFReasoning.updateQuery(update, ds); 
 				ds.commit();

@@ -3,8 +3,7 @@ package com.yyn.service;
 
 import java.util.List;
 
-import javax.servlet.ServletContext;
-
+import com.yyn.config.Config;
 import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
@@ -16,43 +15,39 @@ import org.apache.jena.reasoner.rulesys.GenericRuleReasoner;
 import org.apache.jena.reasoner.rulesys.Rule;
 import org.springframework.stereotype.Service;
 
-import com.yyn.util.NameSpaceConstants;
+import com.yyn.config.NameSpaceConstants;
 import com.yyn.util.RDFReasoning;
 
 @Service
 public class AnomalyService {
-	private static final String NS_WOT = "http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#";
 	
 	public void createState(Dataset dataset) {
-		String highState = StrUtils.strjoinNL("PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#>",
-	    		"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-	    		"DELETE { GRAPH wot:sensor_annotation { ?device wot:hasState ?a.} }",
-	    		"INSERT { GRAPH wot:sensor_annotation { ?device wot:hasState wot:high. } }", 
+		String highState = StrUtils.strjoinNL(NameSpaceConstants.PREFIX,
+	    		"DELETE { GRAPH wot:sensor_annotation { ?device wot:currentStatus ?a.} }",
+	    		"INSERT { GRAPH wot:sensor_annotation { ?device wot:currentStatus wot:high. } }",
 	    		"USING  wot:sensor_annotation ",
 	            "WHERE { ",
-	            "?device wot:hasState ?a. ",//用于delete
+	            "?device wot:currentStatus ?a. ",//用于delete
 	            "?device wot:hasValue ?val1. ",//以下用于insert
 	            "?device wot:hasType ?sensorType. ",
 	            "?sensorType wot:defaultObserved ?properCls. ",
 	            "?properCls wot:highThreshold ?val2. ",
 	            "FILTER(?val1 > ?val2)}");
-		String lowState = StrUtils.strjoinNL("PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#>",
-	    		"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-	    		"DELETE { GRAPH wot:sensor_annotation { ?device wot:hasState ?a } } ",
-	    		"INSERT { GRAPH wot:sensor_annotation { ?device wot:hasState wot:low } } ", 
+		String lowState = StrUtils.strjoinNL(NameSpaceConstants.PREFIX,
+	    		"DELETE { GRAPH wot:sensor_annotation { ?device wot:currentStatus ?a } } ",
+	    		"INSERT { GRAPH wot:sensor_annotation { ?device wot:currentStatus wot:low } } ",
 	    		"USING  wot:sensor_annotation ",
-	            "WHERE { ?device wot:hasState ?a. ",//用于匹配删除所有之前的state
+	            "WHERE { ?device wot:currentStatus ?a. ",//用于匹配删除所有之前的state
 	            "?device wot:hasValue ?val1.",
 	            "?device wot:hasType ?sensorType. ",
 	            "?sensorType wot:defaultObserved ?properCls. ",
 	            "?properCls wot:lowThreshold ?val2. ",
 	            "FILTER(?val1 < ?val2)}");
-		String nomalState = StrUtils.strjoinNL("PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#>",
-	    		"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
-	    		"DELETE { GRAPH wot:sensor_annotation {?device wot:hasState ?a } }",
-	    		"INSERT { GRAPH wot:sensor_annotation {?device wot:hasState wot:nomal } }", 
+		String nomalState = StrUtils.strjoinNL(NameSpaceConstants.PREFIX,
+	    		"DELETE { GRAPH wot:sensor_annotation {?device wot:currentStatus ?a } }",
+	    		"INSERT { GRAPH wot:sensor_annotation {?device wot:currentStatus wot:nomal } }",
 	    		"USING  wot:sensor_annotation ",
-	            "WHERE { ?device wot:hasState ?a. ",//用于匹配删除所有之前的state
+	            "WHERE { ?device wot:currentStatus ?a. ",//用于匹配删除所有之前的state
 	            "?device wot:hasValue ?val1.",
 	            "?device wot:hasType ?sensorType. ",
 	            "?sensorType wot:defaultObserved ?properCls. ",
@@ -87,10 +82,7 @@ public class AnomalyService {
 		ds.begin(ReadWrite.WRITE);
 //		推理方式
 		String update = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
+				NameSpaceConstants.PREFIX,
 				"INSERT { ",
 					"GRAPH wot:sensor_annotation {",
 					"?uri rdf:type ?foiCls. ",
@@ -99,7 +91,7 @@ public class AnomalyService {
 				"USING  wot:sensor_annotation ",
 				"WHERE { ?spot a wot:Spot.",
 				"?foiCls rdfs:subClassOf ssn:FeatureOfInterest.",
-				"BIND(URI(CONCAT('"+NS_WOT+"',STRAFTER(str(?spot),'#'),'_',STRAFTER(str(?foiCls),'#'))) as ?uri) }");
+				"BIND(URI(CONCAT('"+NameSpaceConstants.WOT+"',STRAFTER(str(?spot),'#'),'_',STRAFTER(str(?foiCls),'#'))) as ?uri) }");
 		RDFReasoning.updateQuery(update, ds);
 		ds.commit();
 		ds.end();
@@ -112,9 +104,7 @@ public class AnomalyService {
 		//这个语句运行之前?feature必须存在,也就是说必须要有FOI的Instance
 		dataset.begin(ReadWrite.WRITE);
 		String update = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
+				NameSpaceConstants.PREFIX,
 				"INSERT { ",
 					"GRAPH wot:sensor_annotation {",
 					"?uri rdf:type ?propClass. ",
@@ -124,7 +114,7 @@ public class AnomalyService {
 				"USING  wot:sensor_annotation ",
 				"WHERE { ?feature a ?featureCls.",
 				"?featureCls wot:requiresProperty ?propClass.",
-				"BIND(URI(CONCAT('http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#',STRAFTER(str(?feature),'#'),'_',STRAFTER(str(?propClass),'#'))) as ?uri) }");
+				"BIND(URI(CONCAT('"+ NameSpaceConstants.WOT+"',STRAFTER(str(?feature),'#'),'_',STRAFTER(str(?propClass),'#'))) as ?uri) }");
 		RDFReasoning.updateQuery(update, dataset);
 		dataset.commit();
 		dataset.end();
@@ -137,9 +127,7 @@ public class AnomalyService {
 	private void createOptional(Dataset dataset) {
 		dataset.begin(ReadWrite.WRITE);
 		String update = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
+				NameSpaceConstants.PREFIX,
 				"INSERT { ",
 					"GRAPH wot:sensor_annotation {",
 					"?uri rdf:type ?propCls.",
@@ -156,7 +144,7 @@ public class AnomalyService {
 				"?featureCls wot:optionalProp ?propCls. ",
 				"?sensor wot:hasSpot ?loc. ",
 				"?feature wot:hasSpot ?loc.",
-				"BIND(URI(CONCAT('http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#',STRAFTER(str(?feature),'#'),'_',STRAFTER(str(?propCls),'#'))) as ?uri) }");
+				"BIND(URI(CONCAT('"+ NameSpaceConstants.WOT+"',STRAFTER(str(?feature),'#'),'_',STRAFTER(str(?propCls),'#'))) as ?uri) }");
 		RDFReasoning.updateQuery(update, dataset);
 		dataset.commit();
 		dataset.end();
@@ -169,10 +157,7 @@ public class AnomalyService {
 	private void createProcess(Dataset dataset) {
 		dataset.begin(ReadWrite.WRITE);
 		String update = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
+				NameSpaceConstants.PREFIX,
 				"INSERT { ",
 					"GRAPH wot:sensor_annotation {",
 					"?uri rdf:type ?proc.",
@@ -188,7 +173,7 @@ public class AnomalyService {
 				"?prop1 ssn:isPropertyOf ?feature. ",
 				"?feature ssn:hasProperty ?prop2. ",
 				"?prop2 a ?propCls2. ",
-				"BIND(URI(CONCAT('http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop2),'#'))) as ?uri) }");
+				"BIND(URI(CONCAT('"+ NameSpaceConstants.WOT+"',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop2),'#'))) as ?uri) }");
 		RDFReasoning.updateQuery(update, dataset);
 		dataset.commit();
 		dataset.end();
@@ -202,9 +187,7 @@ public class AnomalyService {
 		dataset.begin(ReadWrite.WRITE);
 		//负正->负
 		String updateNP = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
+				NameSpaceConstants.PREFIX,
 				"INSERT { ",
 					"GRAPH wot:sensor_annotation {",
 					"?uri rdf:type wot:NegativeCorrelationProcess.",
@@ -220,13 +203,11 @@ public class AnomalyService {
 				"?proc2 ssn:hasInput ?prop2. ",
 				"?proc2 ssn:hasOutput ?prop3. ",
 				"FILTER NOT EXISTS {?prop2 ssn:forProperty ?sensor}",//prop2必须是通量,也就是没有对应的sensor
-				"BIND(URI(CONCAT('http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop3),'#'))) as ?uri) }");
+				"BIND(URI(CONCAT('"+ NameSpaceConstants.WOT+"',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop3),'#'))) as ?uri) }");
 		RDFReasoning.updateQuery(updateNP, dataset);
 		//正正->正
 		String updatePP = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
+				NameSpaceConstants.PREFIX,
 				"INSERT { ",
 					"GRAPH wot:sensor_annotation {",
 					"?uri rdf:type wot:PositiveCorrelationProcess.",
@@ -242,13 +223,11 @@ public class AnomalyService {
 				"?proc2 ssn:hasInput ?prop2. ",
 				"?proc2 ssn:hasOutput ?prop3. ",
 				"FILTER NOT EXISTS {?prop2 ssn:forProperty ?sensor}",
-				"BIND(URI(CONCAT('http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop3),'#'))) as ?uri) }");
+				"BIND(URI(CONCAT('"+ NameSpaceConstants.WOT+"',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop3),'#'))) as ?uri) }");
 		RDFReasoning.updateQuery(updatePP, dataset);
 		//正负->负
 		String updatePN = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
+				NameSpaceConstants.PREFIX,
 				"INSERT { ",
 					"GRAPH wot:sensor_annotation {",
 					"?uri rdf:type wot:NegativeCorrelationProcess.",
@@ -264,13 +243,11 @@ public class AnomalyService {
 				"?proc2 ssn:hasInput ?prop2. ",
 				"?proc2 ssn:hasOutput ?prop3. ",
 				"FILTER NOT EXISTS {?prop2 ssn:forProperty ?sensor}",
-				"BIND(URI(CONCAT('http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop3),'#'))) as ?uri) }");
+				"BIND(URI(CONCAT('"+ NameSpaceConstants.WOT+"',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop3),'#'))) as ?uri) }");
 		RDFReasoning.updateQuery(updatePN, dataset);
 		//负负->正
 		String updateNN = StrUtils.strjoinNL(
-				"PREFIX wot: <http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#> ",
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ",
-				"PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#> ",
+				NameSpaceConstants.PREFIX,
 				"INSERT { ",
 					"GRAPH wot:sensor_annotation {",
 					"?uri rdf:type wot:PositiveCorrelationProcess.",
@@ -286,7 +263,7 @@ public class AnomalyService {
 				"?proc2 ssn:hasInput ?prop2. ",
 				"?proc2 ssn:hasOutput ?prop3. ",
 				"FILTER NOT EXISTS {?prop2 ssn:forProperty ?sensor}",
-				"BIND(URI(CONCAT('http://www.semanticweb.org/yangyunong/ontologies/2016/7/WoT_domain#',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop3),'#'))) as ?uri) }");
+				"BIND(URI(CONCAT('"+ NameSpaceConstants.WOT+"',STRAFTER(str(?prop1),'#'),'_',STRAFTER(str(?prop3),'#'))) as ?uri) }");
 		RDFReasoning.updateQuery(updateNN, dataset);
 		dataset.commit();
 		dataset.end();

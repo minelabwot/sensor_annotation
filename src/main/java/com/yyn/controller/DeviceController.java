@@ -12,6 +12,7 @@ import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 
 import com.yyn.dao.DatasetContainer;
+import javafx.beans.binding.IntegerBinding;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
@@ -31,13 +32,11 @@ public class DeviceController {
 	@Autowired
 	DeviceService ds;
 
-	//附带EL的版本,11月11日更新
 	//添加tdb版本12-14更新
 	@RequestMapping("/devicePropertyAdd.do")
 	public String addProperty2mysql(HttpServletRequest request, Model model) {
 		Dataset tdbdataset = ((DatasetContainer) WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
 				getBean("datasetContainer")).getDataset();
-		System.out.println("mark_"+(tdbdataset == null));
 		
 		User user = (User)request.getSession().getAttribute("userInfo");
 		String owner = user.getName();
@@ -100,18 +99,35 @@ public class DeviceController {
 	
 	
 	@RequestMapping("/deviceDetail.do")
-	public String showDetail(String id, Model model) {
+	public String showDetail(String id, String deviceType, Model model) {
 		Map<String,String> map = new HashMap<>();
 		map.put("id",id);
-		@SuppressWarnings("rawtypes")
-		List list = ds.showDetail(id,map);
+		ds.showDetail(id,map);
 		model.addAttribute("avp", map);
-		model.addAttribute("events_actions", list);
 		model.addAttribute("id", id);
-		model.addAttribute("rules",ds.showRule(id));
+		model.addAttribute("deviceType",deviceType);
 		return "servicePage/detail.jsp";
 	}
-	
+
+	@RequestMapping("/deviceActionAdd.do")
+	public String addOperation(HttpServletRequest request,Model model) {
+		Map<String,String[]> map = request.getParameterMap();
+		String id = map.get("id")[0];
+		String[] name = map.get("action_name[]");
+		String[] url = map.get("action_urlTemplate[]");
+		String[] param = map.get("action_messageContent[]");
+		String[] lifecycle = map.get("action_lifecycle[]");
+		String[] effect = map.get("action_effect[]");
+		Dataset dataset = ((DatasetContainer) WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
+				getBean("datasetContainer")).getDataset();
+		System.out.println(name.length);
+		for(int i=0;i<name.length;++i) {
+			System.out.println(id+"_"+name[i]+"_"+url[i]+"_"+param[i]+"_"+lifecycle[i]+"_"+effect[i]);
+			ds.addAction2TDB(id, name[i], url[i], param[i], lifecycle[i], effect[i], dataset);
+		}
+		return showDetail(id,"actuator",model);
+	}
+
 	@RequestMapping("/deviceSearching.do")
 	public String searchSomeThing(HttpServletRequest request,Model model) {
 		Dataset dataset = ((DatasetContainer)WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).

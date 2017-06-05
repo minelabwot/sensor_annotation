@@ -6,5 +6,5 @@ package com.yyn.config;
 public class Config {
     public static final String TDB_ROOT = "/data/sensor_annotation/RDF_Database/";
     public static final String TDB_DATABASE = "sensor_annotation";
-    public static final String OWL_FILE_NAME = "Wot.owl";
+    public static final String OWL_FILE_NAME = "swot-o.owl";
 }

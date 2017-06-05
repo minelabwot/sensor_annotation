@@ -33,7 +33,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 							<td><c:out value="${device.name }"/></td>   
 							<td><c:out value="${device.description }"/></td>
 							<c:if test="${status eq 'all' }"><td><c:out value="${device.owner}"/></td></c:if>
-							<td><a href="<%=basePath %>deviceDetail.do?id=${device.id}">详细信息</a></td>
+							<td><a href="<%=basePath %>deviceDetail.do?id=${device.id}&deviceType=sensor">详细信息</a></td>
 						</tr>
 						</c:forEach>
 					</table>
@@ -61,7 +61,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 							<td><c:out value="${device.name }"/></td>   
 							<td><c:out value="${device.description }"/></td>
 							<c:if test="${status eq 'all' }"><td><c:out value="${device.owner}"/></td></c:if>
-							<td><a href="<%=basePath %>deviceDetail.do?id=${device.id}">详细信息</a></td>
+							<td><a href="<%=basePath %>deviceDetail.do?id=${device.id}&deviceType=actuator">详细信息</a></td>
 						</tr>
 						</c:forEach>
 					</table>

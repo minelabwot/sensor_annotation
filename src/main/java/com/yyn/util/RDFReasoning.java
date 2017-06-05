@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import com.yyn.config.NameSpaceConstants;
 import org.apache.jena.atlas.lib.StrUtils;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.QueryExecution;
@@ -27,7 +28,7 @@ public class RDFReasoning {
 		String path = "/Users/yangyunong/javaworkspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/sensor_annotation/WEB-INF/RDF_Database/";
 		Dataset ds = getDataset(path, "sensor_annotation", "");
 		String prefix = StrUtils.strjoinNL(
-				"PREFIX wot: <"+NameSpaceConstants.WOT+"> ",
+				"PREFIX wot: <"+ NameSpaceConstants.WOT+"> ",
 				"PREFIX rdf: <"+NameSpaceConstants.RDF+"> ",
 				"PREFIX ssn: <"+NameSpaceConstants.SSN+"> ",
 				"PREFIX rdfs: <"+NameSpaceConstants.RDFS+"> ");
