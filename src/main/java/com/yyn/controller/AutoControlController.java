@@ -41,7 +41,6 @@ public class AutoControlController {
 		Dataset ds = ((DatasetContainer) WebApplicationContextUtils.getWebApplicationContext(request.getServletContext()).
 				getBean("datasetContainer")).getDataset();
 		acs.generateControlModel(ds,request);
-		RDFReasoning.output(ds);
 		return "redirect:/index.jsp";
 	}
 
@@ -72,10 +71,10 @@ public class AutoControlController {
 				NameSpaceConstants.PREFIX,
 				"SELECT DISTINCT ?id ?sensor ?pro",
 				"WHERE { GRAPH wot:sensor_annotation { ?a wot:deviceID '"+actuator_id+ "'^^xsd:string. ",
-				"?a wot:subscribe ?anomaly. ",
-				"?sensor ssn:detects ?anomaly. ",
+				"?a wot:hasSpot ?spot. ",
+				"?sensor wot:hasSpot ?spot. ",
 				"?type a wot:EntityType. ",
-				"?sensor wot:hasType ?type. ",
+				"?sensor wot:hasType wot:TemperatureSensor. ",
 				"?type wot:defaultObserved ?pro. ",
 				"?sensor wot:deviceID ?id",
 				"} }");
@@ -87,7 +86,7 @@ public class AutoControlController {
 
 		while(rs.hasNext()) {
 			QuerySolution qs = rs.next();
-			name.add(qs.get("a").asResource().getLocalName());
+			name.add(qs.get("sensor").asResource().getLocalName());
 			pro.add(qs.get("pro").asResource().getLocalName());
 			id.add(qs.get("id").asLiteral().getString());
 			System.out.println(name.get(name.size()-1)+"_"+id.get(name.size()-1));
@@ -170,6 +169,7 @@ public class AutoControlController {
 				dataset.end();
 			}
 		}
+		System.out.println("----------0606");
 		response.setStatus(201);
 	}
 }

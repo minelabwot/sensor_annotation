@@ -89,8 +89,7 @@ public class AutoControlService {
 					"?status wot:hasValue ?status_value. ",
 					"?actuator wot:currentState ?actuator_state. ",
 					"?actuator_state wot:hasValue ?state_value2. ",
-					"?actuator msm:hasOperation ?actuation. ",
-					"?actuation a san:Actuation. ",
+					"?actuator a san:Actuator. ",
 					"?actuator ?rel ?sub. ",//用于删除先前状态
 					"FILTER (?status_value = 0 && ?state_value2 != 0). ",
 					"}");
@@ -120,24 +119,15 @@ public class AutoControlService {
 				"} }");
 		QueryExecution qExec = QueryExecutionFactory.create(query, ds);
 		ResultSet rs = qExec.execSelect();
-		String url = null;
-		String param = null;
-		if (rs.hasNext()) {
-			QuerySolution qs = rs.next();
-			url = qs.getLiteral("url").getString();
-			param = qs.getLiteral("param").getString();
-			System.out.println("调用的服务是->"+url+"_"+param);
-		}
 		while(rs.hasNext()) {
 			System.out.println("error,2 action contains in config");
 			QuerySolution qs = rs.next();
-			String url_e = qs.getLiteral("url").getString();
-			String param_e = qs.getLiteral("param").getString();
-			System.out.println("未被处理的调用服务是->"+url_e+"_"+param_e);
+			String url = qs.getLiteral("url").getString();
+			String param = qs.getLiteral("param").getString();
+			System.out.println("未被处理的调用服务是->"+url+"_"+param);
+			callRestfulService(url,param);
 		}
 		qExec.close();
-		callRestfulService(url,param);
-
 	}
 	/*
 	private void generateAction(Dataset ds) {
