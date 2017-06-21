@@ -273,8 +273,7 @@ public class AnomalyService {
 		dataset.begin(ReadWrite.WRITE);
 		//inf推理
 		Model model = dataset.getNamedModel(NameSpaceConstants.WOT+"sensor_annotation");
-		String path = "/data/sensor_annotation/rules.rule";
-		List<Rule> rules = Rule.rulesFromURL(path);
+		List<Rule> rules = Rule.rulesFromURL(Config.RULE_PATH);
 		System.out.println("mark"+rules.size());
 		Reasoner reasoner = new GenericRuleReasoner(rules);  
     	reasoner.setDerivationLogging(true);
